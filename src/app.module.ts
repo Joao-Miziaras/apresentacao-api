@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StocksModule } from './stocks/stocks.module';
 import { AuthModule } from './auth/auth.module';
+import { VaultService } from './vault/vault.service';
 
 @Module({
   imports: [
@@ -18,5 +19,6 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
     StocksModule,
   ],
+  providers: [VaultService],
 })
 export class AppModule {}
