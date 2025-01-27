@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import * as dotenv from 'dotenv';
+import * as https from 'https';
 
 dotenv.config();
 
@@ -12,7 +13,12 @@ export class VaultService {
   private secretId = process.env.VAULT_SECRET_ID;
   private token: string;
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) {
+    // Configura o axios para aceitar certificado sem verificação
+    this.httpService.axiosRef.defaults.httpsAgent = new https.Agent({
+      rejectUnauthorized: false,
+    });
+  }
 
   async authenticate(): Promise<void> {
     const response = await firstValueFrom(
