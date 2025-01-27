@@ -1,36 +1,40 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Injectable()
 export class VaultService {
-  private readonly vaultUrl = 'http://localhost:8200'; // URL do Vault
-  private readonly roleId = '3cdb2639-da01-acd0-d811-11d2eaf60744'; // Substitua pelo role_id gerado no Vault
-  private readonly secretId = '317ed312-9a29-5536-0af3-425a94a22a2e'; // Substitua pelo secret_id gerado no Vault
+  private vaultUrl = process.env.VAULT_URL;
+  private roleId = process.env.VAULT_ROLE_ID;
+  private secretId = process.env.VAULT_SECRET_ID;
+  private token: string;
 
-  async getVaultToken(): Promise<string> {
-    const url = `${this.vaultUrl}/v1/auth/approle/login`;
+  constructor(private readonly httpService: HttpService) {}
 
-    const response = await axios.post(url, {
-      role_id: this.roleId,
-      secret_id: this.secretId,
-    });
-
-    return response.data.auth.client_token;
+  async authenticate(): Promise<void> {
+    const response = await firstValueFrom(
+      this.httpService.post(`${this.vaultUrl}/v1/auth/approle/login`, {
+        role_id: this.roleId,
+        secret_id: this.secretId,
+      }),
+    );
+    this.token = response.data.auth.client_token;
   }
 
   async getDatabaseCredentials(): Promise<{ username: string; password: string }> {
-    const token = await this.getVaultToken();
-    const url = `${this.vaultUrl}/v1/database/creds/mysql-role`;
+    if (!this.token) {
+      await this.authenticate();
+    }
 
-    const response = await axios.get(url, {
-      headers: {
-        'X-Vault-Token': token,
-      },
-    });
+    const response = await firstValueFrom(
+      this.httpService.get(`${this.vaultUrl}/v1/database/creds/my-role`, {
+        headers: { 'X-Vault-Token': this.token },
+      }),
+    );
 
-    return {
-      username: response.data.data.username,
-      password: response.data.data.password,
-    };
+    return response.data.data;
   }
 }

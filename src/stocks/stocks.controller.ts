@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { StocksService } from './stocks.service';
 import { Stock } from './stocks.entity';
 
@@ -9,5 +9,10 @@ export class StocksController {
   @Get()
   async getLatestStocks(): Promise<Stock[]> {
     return this.stocksService.getLatestStocks(10); // Busca os últimos 10 registros
+  }
+
+  @Post('generate')
+  async generateStockData(@Body('count') count: number = 10): Promise<Stock[]> {
+    return this.stocksService.generateStockData(count);
   }
 }
