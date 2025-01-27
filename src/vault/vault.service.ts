@@ -36,7 +36,7 @@ export class VaultService {
     }
 
     const response = await firstValueFrom(
-      this.httpService.get(`${this.vaultUrl}/v1/database/creds/my-role`, {
+      this.httpService.get(`${this.vaultUrl}/v1/database/creds/mysqlrole`, {
         headers: { 'X-Vault-Token': this.token },
       }),
     );
